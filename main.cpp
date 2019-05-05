@@ -24,34 +24,29 @@ const auto TIME_STEP = 0.1;
 // Набор классов в решении *ваш* - что в них нужно, то и реализуете.
 // Копировать этот класс *не* надо. Он тут только для примера.
 // Как уже было сказано выше, это очень быстрый и грязный пример, просто чтобы показать технические приёмы.
-class Triangle : public VisPolygon {
+class Figure : public VisPolygon {
+
 protected:
-	// Например, храним только одну точку. Причём это даже не центр масс. (центр масс)
-	// В данном примере фигура при движении считается равной вот этой самой некоторой её точке.
-	// А все остальные вершины "дорисовываются" чисто на этапе построения картинки.
+
 	double x;
 	double y;
-	// Некий характерный размер нашего треугольника.
-	// Выражен в попугаях. Интерпретируется нашим кодом. Как именно - наше дело.
-	// Этот параметр "в сыром виде" наружу не виден вообще.
 	double size;
-	// Скорость фигуры, куда же без неё
 	double vx;
 	double vy;
+	double dt = 0.1; // Шаг по времени
+					 // Вопрос : Почему выдает ошибку ссылки на удаленную
+					 // Функцию если const double dt
 
 public:
-	// Конструктор
-	Triangle(double x, double y, double size, double vx, double vy) : x(x), y(y), size(size), vx(vx), vy(vy) {
-	}
+
+	Figure(double x, double y, double size, double vx, double vy) : x(x), y(y), size(size), vx(vx), vy(vy) {}
 
 	// Далее какие-то ваши методы, никак не связанные с VisPolygon.
 	// Например, в данном примере этот метод отвечает за движение нашего треугольника нашим движком.
-	void move(double dt) {
+	void move() {
 		x += vx * dt;
 		y += vy * dt;
 	}
-
-
 
 	// Метод поверки нахождения в стенках фигуры
 	void CheckWidth() {
@@ -62,6 +57,19 @@ public:
 	bool CheckHeight() { // если улетел, то true
 		return (y > SCENE_HEIGHT);
 	}
+
+
+	// Вернем координаты ЦМ
+	void getXY() {
+		cout << "(" << x << ";" << y << ") ";
+	}
+
+};
+
+class Triangle : public Figure {
+public:
+	// Конструктор
+	Triangle(double x, double y, double size, double vx, double vy) : Figure(x, y, size, vx, vy) {}
 
 	// Ещё нужна реализация методов интерфейса на базе *ваших* переменных.
 	// Переписывать всю свою реализацию под имена методов и полей из интерфейса *не* надо.
@@ -74,44 +82,12 @@ public:
 		return vertices;
 	}
 
-	// Вернем координаты ЦМ
-	void getXY() {
-		cout << "(" << x << ";" << y << ") ";
-	}
-
 };
 
-class Square : public VisPolygon {
-protected:
-
-	double x;
-	double y;
-	double size;
-	double vx;
-	double vy;
-
+class Square : public Figure {
 public:
 	// Конструктор
-	Square(double x, double y, double size, double vx, double vy) : x(x), y(y), size(size), vx(vx), vy(vy) {
-	}
-
-
-	void move(double dt) {
-		x += vx * dt;
-		y += vy * dt;
-	}
-
-
-
-	// Метод поверки нахождения в стенках фигуры
-	void CheckWidth() {
-		if (abs(x) > SCENE_WIDTH / 2) { vx *= -1; } // если ЦМ за стенкой, меняем направление
-	}
-
-	// Метод проверки высоты фигуры
-	bool CheckHeight() { // если улетел, то true
-		return (y > SCENE_HEIGHT);
-	}
+	Square(double x, double y, double size, double vx, double vy) : Figure(x, y, size, vx, vy) {}
 
 	vector<VisPoint> getVertices() const override {
 		vector<VisPoint> vertices = vector<VisPoint>(4);
@@ -122,44 +98,12 @@ public:
 		return vertices;
 	}
 
-	// Вернем координаты ЦМ
-	void getXY() {
-		cout << "(" << x << ";" << y << ") ";
-	}
-
 };
 
-class Rhombus : public VisPolygon {
-protected:
-
-	double x;
-	double y;
-	double size;
-	double vx;
-	double vy;
-
+class Rhombus : public Figure {
 public:
 	// Конструктор
-	Rhombus(double x, double y, double size, double vx, double vy) : x(x), y(y), size(size), vx(vx), vy(vy) {
-	}
-
-
-	void move(double dt) {
-		x += vx * dt;
-		y += vy * dt;
-	}
-
-
-
-	// Метод поверки нахождения в стенках фигуры
-	void CheckWidth() {
-		if (abs(x) > SCENE_WIDTH / 2) { vx *= -1; } // если ЦМ за стенкой, меняем направление
-	}
-
-	// Метод проверки высоты фигуры
-	bool CheckHeight() { // если улетел, то true
-		return (y > SCENE_HEIGHT);
-	}
+	Rhombus(double x, double y, double size, double vx, double vy) : Figure(x, y, size, vx, vy) {}
 
 	vector<VisPoint> getVertices() const override {
 		vector<VisPoint> vertices = vector<VisPoint>(4);
@@ -170,13 +114,7 @@ public:
 		return vertices;
 	}
 
-	// Вернем координаты ЦМ
-	void getXY() {
-		cout << "(" << x << ";" << y << ") ";
-	}
-
 };
-
 // Ваш класс сцены. В нём вся основная логика. Порождение и уничтожение фигур, обработка стенок - всё здесь.
 // Класс унаследован от FiguresRainScene, реализует интерфейс с методами getNumberOfFigures / getFigure / doTimeStep.
 class SampleScene : public FiguresRainScene {
@@ -197,25 +135,50 @@ public:
 
 	//указатель на фигуру под номером (?)
 	const VisPolygon* getFigure(unsigned int number) const override {
-		return &bodiesT.at(number);
+		if (number< bodiesT.size()) {
+			return &bodiesT.at(number);
+		}
+		else {
+			if (number >= bodiesT.size() + bodiesS.size()) {
+				return &bodiesR.at(number- bodiesT.size()- bodiesS.size());
+			}
+			else {
+				return &bodiesS.at(number- bodiesT.size());
+			}
+		}
 	}
 
 	//делаем один "шаг"
 	void doTimeStep() override {
 		for (Triangle& t : bodiesT) {
-			t.move(0.1);
-			t.getVertices();
+			t.move();
+			t.getVertices();//переписываем координаты точек объектов, чтобы потом отдать их в визуализатор
 			t.CheckWidth();
 		}
 		for (Square& t : bodiesS) {
-			t.move(0.1);
+			t.move();
 			t.getVertices();
 			t.CheckWidth();
 		}
 		for (Rhombus& t : bodiesR) {
-			t.move(0.1);
+			t.move();
 			t.getVertices();
 			t.CheckWidth();
+		}
+		clear();
+
+		int k = rand() % 4; // Число 0..3
+		if (k = 1) {
+			int numberT = 1 + rand() % 9;
+			creatureT(numberT);
+		}
+		if (k = 2) {
+			int numberS = 1 + rand() % 9;
+			creatureS(numberS);
+		}
+		if (k = 3) {
+			int numberR = 1 + rand() % 9;
+			creatureR(numberR);
 		}
 	}
 
@@ -256,22 +219,19 @@ public:
 			t.getXY();
 		}
 	}
-
-	// Далее, возможно, ещё какая-то куча ваших методов, с интерфейсом не связанных
-	// ...
-
-	// Какая-то работа по иниту, например.
-	// Здесь у нас всего два треугольника во всей сцене. Ничего не порождается и не уничтожается. И никакого рандома.
-	void initScene(int numberT, int numberS, int numberR) {
+    void creatureT(int numberT) {
 		// Заполняем случайно вектора фигур
 		for (int i = 0; i < numberT; i++) {
-			double x = -SCENE_WIDTH / 2 + rand() % SCENE_WIDTH;
+			double x = -SCENE_WIDTH / 2 + rand() % SCENE_WIDTH; // Неявное приведение типа int от random() к double. Ошибка?
 			double size = 1 + rand() % (SCENE_WIDTH / 4);
 			//Логическое с неба взятое ограничение на скорости
 			double vy = rand() % SCENE_HEIGHT;
-			double vx = -SCENE_WIDTH  +  rand() % SCENE_WIDTH ;
+			double vx = -SCENE_WIDTH + rand() % SCENE_WIDTH;
 			bodiesT.push_back(Triangle(x, 0, size, vx, vy));
 		}
+	}
+
+	void creatureS(int numberS) {
 		for (int i = 0; i < numberS; i++) {
 			double x = -SCENE_WIDTH / 2 + rand() % (SCENE_WIDTH / 2);
 			double size = 1 + rand() % (SCENE_WIDTH / 4);
@@ -279,6 +239,9 @@ public:
 			double vx = -SCENE_WIDTH + rand() % SCENE_WIDTH;
 			bodiesS.push_back(Square(x, 0, size, vx, vy));
 		}
+	}
+
+	void creatureR(int numberR) {
 		for (int i = 0; i < numberR; i++) {
 			double x = -SCENE_WIDTH / 2 + rand() % (SCENE_WIDTH / 2);
 			double size = 1 + rand() % (SCENE_WIDTH / 4);
@@ -286,9 +249,16 @@ public:
 			double vx = -SCENE_WIDTH + rand() % SCENE_WIDTH;
 			bodiesR.push_back(Rhombus(x, 0, size, vx, vy));
 		}
+	}
+	// Далее, возможно, ещё какая-то куча ваших методов, с интерфейсом не связанных
+	// ...
 
-		// bodiesT.push_back(Triangle(5, 0, 1, 2, 1)); // y=0 !! x < ширины стенок
-		// bodiesT.push_back(Triangle(-5, 0, 1, -1, 2)); // vy>0 !!
+	// Какая-то работа по иниту, например.
+	// Здесь у нас всего два треугольника во всей сцене. Ничего не порождается и не уничтожается. И никакого рандома.
+	void initScene(int numberT, int numberS, int numberR) {
+		creatureT(numberT);
+		creatureS(numberS);
+		creatureR(numberR);
 	}
 };
 
@@ -329,14 +299,14 @@ int main()
 
 	for (int i = 0; i < 100; i++) {
 		scene->doTimeStep();
-		scene->clear();
 		cout << "на время "<< i <<"-го шага у нас "<< scene->getNumberOfFigures() << " фигур c координатами " ;//нет визуализации, проверка роботы кода
-		scene->getXY(); // Посмотрели координаты
+		//scene->getXY(); // Посмотрели координаты
 		cout << endl;
 	}
 
 	// Удаляем сцену
 	delete scene;
+
 
 	return 0;
 };
